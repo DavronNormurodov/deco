@@ -1,0 +1,52 @@
+#version: "3.9"
+
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - /data/db:/var/lib/postgresql/data
+    networks:
+      - deco-network
+    environment:
+      - POSTGRES_DB=deco_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1611mm
+
+  backend:
+    depends_on:
+      - db
+    build: .
+    restart: always
+    networks:
+      - deco-network
+    volumes:
+      - /data/media:/app/media
+    ports:
+      - "8003:8003"
+    entrypoint: >
+      sh -c "./wait-for-it.sh 172.28.80.1:5432 --
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8003"
+    environment:
+      - DATABASE_NAME=deco_db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=1611mm
+      - DATABASE_HOST:database:5432
+      - REDIS_HOST:redis:5432
+      - REDIS_PASSWORD=1611mm
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - /dаta/:/root/redis
+      - /data/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=1611mm
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+networks:
+  deco-network:

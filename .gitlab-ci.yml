@@ -1,0 +1,33 @@
+#image: docker:latest
+
+#services:
+#  - docker:dind
+
+stages:
+  - build
+
+#variables:
+#  CONTAINER_NAME: "deco_docker"
+#  IMAGE_NAME: "deco_docker_image"
+#  DOCKER_DRIVER: overlay2
+##  DOCKER_HOST: tcp://docker:2375
+##  DOCKER_DRIVER: overlay2
+
+#services:
+#  - docker:dind
+
+#before_script:
+#  - apk add --no-cache curl docker-compose
+#  - docker info
+#  - docker-compose version
+
+build_project:
+  stage: build
+  script:
+    - docker container rm -f deco_docker || true
+    - docker build --no-cache -f Dockerfile -t deco_docker:latest .
+    - docker run -d --restart=always --name deco_docker -v /var/www/uploads:/app/media --net=deco_network -h 0.0.0.0 -p 8003:8003 deco_docker:latest
+  tags:
+    - deco_test
+  only:
+    - main
